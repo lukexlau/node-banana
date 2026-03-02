@@ -13,6 +13,7 @@ import { deduplicatedFetch } from "@/utils/deduplicatedFetch";
 import { evaluateRule } from "@/store/utils/ruleEvaluation";
 import { EASING_PRESETS, getPresetBezier, getEasingBezier } from "@/lib/easing-presets";
 import { getAllEasingNames, getEasingFunction } from "@/lib/easing-functions";
+import { getModelPageUrl, getProviderDisplayName } from "@/utils/providerUrls";
 
 // List of node types that have configurable parameters
 const CONFIGURABLE_NODE_TYPES: NodeType[] = [
@@ -119,12 +120,12 @@ export function ControlPanel() {
       <div className="w-80 bg-neutral-800 border border-neutral-700 rounded-xl shadow-xl max-h-[80vh] overflow-y-auto pointer-events-auto transition-opacity duration-200 nowheel">
         <div className="p-4">
           {/* Header */}
-          <h3 className="text-sm font-medium text-neutral-200 mb-4">
+          <h3 className="text-sm font-medium text-neutral-200">
             {getNodeTypeTitle(selectedNode.type as NodeType)}
           </h3>
 
           {/* Node-specific controls */}
-          <div className="space-y-4">
+          <div className="space-y-4 mt-4">
             {selectedNode.type === "nanoBanana" && (
               <GenerateImageControls node={selectedNode} />
             )}
@@ -353,16 +354,35 @@ function GenerateImageControls({ node }: { node: Node }) {
   return (
     <>
       <div className="space-y-3">
-        {/* Model display + Browse */}
-        <div>
-          <label className="block text-xs font-medium text-neutral-400 mb-1">Model</label>
-          <div className="flex items-center gap-2">
+        {/* Model name + provider with link — sits directly under title divider */}
+        <div className="border-t border-neutral-700 pt-3">
+          <div className="flex items-start gap-2">
             <div className="flex-1 min-w-0">
               <div className="text-sm text-neutral-100 truncate">
                 {nodeData.selectedModel?.displayName || GEMINI_IMAGE_MODELS.find(m => m.value === nodeData.model)?.label || "Select model..."}
               </div>
-              <div className="text-[10px] text-neutral-500 truncate">
-                {enabledProviders.find(p => p.id === currentProvider)?.name || currentProvider}
+              <div className="flex items-center gap-1 mt-0.5">
+                <span className="text-[10px] text-neutral-500 truncate">
+                  {enabledProviders.find(p => p.id === currentProvider)?.name || currentProvider}
+                </span>
+                {nodeData.selectedModel?.modelId && (
+                  <a
+                    href={getModelPageUrl(currentProvider, nodeData.selectedModel.modelId) || "#"}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-neutral-500 hover:text-neutral-300 transition-colors"
+                    title={`View on ${getProviderDisplayName(currentProvider)}`}
+                    onClick={(e) => {
+                      if (!getModelPageUrl(currentProvider, nodeData.selectedModel?.modelId || "")) {
+                        e.preventDefault();
+                      }
+                    }}
+                  >
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  </a>
+                )}
               </div>
             </div>
             <button

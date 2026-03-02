@@ -213,9 +213,9 @@ export function FloatingNodeHeader({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="px-3 py-2 flex items-center justify-between">
+      <div className="px-1 py-2 flex items-center gap-2 w-full">
         {/* Title Section */}
-        <div className="flex-1 min-w-0 flex items-center gap-1.5">
+        <div className="flex-1 min-w-0 flex items-center gap-1.5 pl-2">
           {titlePrefix}
           {isEditingTitle ? (
             <input
@@ -240,8 +240,8 @@ export function FloatingNodeHeader({
           {headerAction}
         </div>
 
-        {/* Controls - fade in on hover/selected */}
-        <div className={`flex items-center gap-2 transition-opacity duration-200 ${showControls ? 'opacity-100' : 'opacity-0'}`}>
+        {/* Controls - right-aligned, fade in on hover/selected */}
+        <div className={`shrink-0 flex items-center gap-1 pr-1 transition-opacity duration-200 ${showControls ? 'opacity-100' : 'opacity-0'}`}>
           {/* Lock Badge for nodes in locked groups */}
           {isInLockedGroup && (
             <div className="shrink-0 flex items-center" title="This node is in a locked group and will be skipped during execution">
