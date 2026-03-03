@@ -112,7 +112,7 @@ export function OutputNode({ id, data, selected }: NodeProps<OutputNodeType>) {
         id={id}
         selected={selected}
         isExecuting={isRunning}
-        contentClassName="flex-1 min-h-0 overflow-clip relative"
+        contentClassName="flex-1 min-h-0 overflow-clip rounded-lg relative"
         className="min-w-[200px]"
       >
         <Handle
