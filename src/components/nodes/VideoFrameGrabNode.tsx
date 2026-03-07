@@ -43,6 +43,7 @@ export function VideoFrameGrabNode({ id, data, selected }: NodeProps<VideoFrameG
       hasError={nodeData.status === "error"}
       minWidth={320}
       minHeight={320}
+      aspectFitMedia={nodeData.outputImage}
     >
       {/* Video In (target, left, 50%) */}
       <Handle

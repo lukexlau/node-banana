@@ -1,8 +1,9 @@
 "use client";
 
-import { ReactNode, useCallback } from "react";
+import { ReactNode, useCallback, useEffect, useRef } from "react";
 import { NodeResizer, OnResize, useReactFlow } from "@xyflow/react";
 import { useWorkflowStore } from "@/store/workflowStore";
+import { getMediaDimensions, calculateAspectFitSize } from "@/utils/nodeDimensions";
 
 interface BaseNodeProps {
   id: string;
@@ -16,6 +17,8 @@ interface BaseNodeProps {
   minHeight?: number;
   /** When true, node has no background/border — content fills the entire node area */
   fullBleed?: boolean;
+  /** Media URL (image/video) to use for aspect-fit resize on resize-handle double-click */
+  aspectFitMedia?: string | null;
 }
 
 export function BaseNode({
@@ -29,6 +32,7 @@ export function BaseNode({
   minWidth = 180,
   minHeight = 100,
   fullBleed = false,
+  aspectFitMedia,
 }: BaseNodeProps) {
   const currentNodeIds = useWorkflowStore((state) => state.currentNodeIds);
   const nodes = useWorkflowStore((state) => state.nodes);
@@ -63,6 +67,69 @@ export function BaseNode({
     [id, getNodes, setNodes]
   );
 
+  // Double-click resize handle → aspect-fit to media
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!aspectFitMedia || !selected) return;
+
+    const el = containerRef.current;
+    if (!el) return;
+
+    // Walk up to .react-flow__node wrapper
+    const nodeWrapper = el.closest(".react-flow__node");
+    if (!nodeWrapper) return;
+
+    const handles = nodeWrapper.querySelectorAll(".react-flow__resize-control");
+    if (handles.length === 0) return;
+
+    const handler = async (e: Event) => {
+      e.stopPropagation();
+      const dims = await getMediaDimensions(aspectFitMedia);
+      if (!dims) return;
+
+      const aspectRatio = dims.width / dims.height;
+      const allNodes = getNodes();
+      const thisNode = allNodes.find((n) => n.id === id);
+      if (!thisNode) return;
+
+      const currentWidth =
+        (thisNode.style?.width as number) ??
+        (thisNode.measured?.width as number) ??
+        thisNode.width ??
+        300;
+      const currentHeight =
+        (thisNode.style?.height as number) ??
+        (thisNode.measured?.height as number) ??
+        thisNode.height ??
+        300;
+
+      const newSize = calculateAspectFitSize(
+        aspectRatio,
+        currentWidth,
+        currentHeight,
+        fullBleed
+      );
+
+      setNodes((nds) =>
+        nds.map((n) => {
+          if (n.id === id || (n.selected && n.id !== id)) {
+            return {
+              ...n,
+              style: { ...n.style, width: newSize.width, height: newSize.height },
+            };
+          }
+          return n;
+        })
+      );
+    };
+
+    handles.forEach((h) => h.addEventListener("dblclick", handler));
+    return () => {
+      handles.forEach((h) => h.removeEventListener("dblclick", handler));
+    };
+  }, [aspectFitMedia, selected, id, fullBleed, getNodes, setNodes]);
+
   return (
     <>
       <NodeResizer
@@ -74,6 +141,7 @@ export function BaseNode({
         onResize={handleResize}
       />
       <div
+        ref={containerRef}
         className={`
           h-full w-full flex flex-col overflow-visible
           ${fullBleed ? "rounded-lg bg-neutral-800/50 border border-neutral-700/40" : "bg-neutral-800 rounded-lg shadow-lg border"}

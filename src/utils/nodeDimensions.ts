@@ -90,6 +90,67 @@ export function getVideoDimensions(
   });
 }
 
+/**
+ * Detect media type from URL and return dimensions using the appropriate loader.
+ * Handles data:image/*, data:video/*, blob:*, and http(s) URLs.
+ */
+export function getMediaDimensions(
+  url: string | null | undefined
+): Promise<{ width: number; height: number } | null> {
+  if (!url) return Promise.resolve(null);
+
+  if (url.startsWith("data:image")) {
+    return getImageDimensions(url);
+  }
+
+  // data:video/*, blob:*, or http(s) URLs → treat as video
+  if (
+    url.startsWith("data:video") ||
+    url.startsWith("blob:") ||
+    url.startsWith("http")
+  ) {
+    return getVideoDimensions(url);
+  }
+
+  return Promise.resolve(null);
+}
+
+/**
+ * Calculate a node size that matches the given aspect ratio, preferring to grow.
+ * No min/max clamping — the node sizes freely to fit the content.
+ *
+ * @param aspectRatio - content width / content height
+ * @param currentWidth - the node's current width
+ * @param currentHeight - the node's current height
+ * @param fullBleed - if true, skip chrome height offset
+ * @returns {width, height} that preserves the aspect ratio at the larger-area candidate
+ */
+export function calculateAspectFitSize(
+  aspectRatio: number,
+  currentWidth: number,
+  currentHeight: number,
+  fullBleed: boolean = false
+): { width: number; height: number } {
+  if (!aspectRatio || aspectRatio <= 0 || !isFinite(aspectRatio)) {
+    return { width: currentWidth, height: currentHeight };
+  }
+
+  const chromeHeight = fullBleed ? 0 : NODE_CHROME_HEIGHT;
+
+  // Candidate A: keep current width, adjust height
+  const heightA = currentWidth / aspectRatio + chromeHeight;
+  const areaA = currentWidth * heightA;
+
+  // Candidate B: keep current height, adjust width
+  const widthB = (currentHeight - chromeHeight) * aspectRatio;
+  const areaB = widthB * currentHeight;
+
+  if (areaA >= areaB) {
+    return { width: Math.round(currentWidth), height: Math.round(heightA) };
+  }
+  return { width: Math.round(widthB), height: Math.round(currentHeight) };
+}
+
 // Node sizing constraints
 const MIN_WIDTH = 200;
 const MAX_WIDTH = 500;

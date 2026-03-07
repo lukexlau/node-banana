@@ -487,6 +487,7 @@ export function GenerateImageNode({ id, data, selected }: NodeProps<NanoBananaNo
       isExecuting={isRunning}
       hasError={nodeData.status === "error"}
       fullBleed
+      aspectFitMedia={nodeData.outputImage}
     >
       {/* Input handles - ALWAYS use same IDs and positions for connection stability */}
       {/* Image input at 35%, Text input at 65% - never changes regardless of model */}

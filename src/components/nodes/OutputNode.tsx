@@ -114,6 +114,7 @@ export function OutputNode({ id, data, selected }: NodeProps<OutputNodeType>) {
         isExecuting={isRunning}
         contentClassName="flex-1 min-h-0 relative"
         className="min-w-[200px]"
+        aspectFitMedia={isAudio ? null : contentSrc}
       >
         <Handle
           type="target"

@@ -395,6 +395,7 @@ export function GenerateVideoNode({ id, data, selected }: NodeProps<GenerateVide
       isExecuting={isRunning}
       hasError={nodeData.status === "error"}
       fullBleed
+      aspectFitMedia={nodeData.outputVideo}
     >
       {/* Dynamic input handles based on model schema */}
       {nodeData.inputSchema && nodeData.inputSchema.length > 0 ? (

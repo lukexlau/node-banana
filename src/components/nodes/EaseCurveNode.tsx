@@ -174,6 +174,7 @@ export function EaseCurveNode({ id, data, selected }: NodeProps<EaseCurveNodeTyp
       hasError={nodeData.status === "error"}
       minWidth={340}
       minHeight={VIDEO_HEIGHT}
+      aspectFitMedia={nodeData.outputVideo}
     >
       {renderHandles()}
 

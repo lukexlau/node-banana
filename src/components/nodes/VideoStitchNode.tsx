@@ -441,6 +441,7 @@ export function VideoStitchNode({ id, data, selected }: NodeProps<VideoStitchNod
       hasError={nodeData.status === "error"}
       minWidth={500}
       minHeight={280}
+      aspectFitMedia={nodeData.outputVideo}
     >
       {renderHandles()}
 

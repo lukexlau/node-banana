@@ -95,6 +95,7 @@ export function AnnotationNode({ id, data, selected }: NodeProps<AnnotationNodeT
       id={id}
       selected={selected}
       contentClassName="flex-1 min-h-0 overflow-clip"
+      aspectFitMedia={nodeData.outputImage}
     >
       <input
         ref={fileInputRef}

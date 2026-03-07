@@ -258,6 +258,7 @@ export function VideoTrimNode({ id, data, selected }: NodeProps<VideoTrimNodeTyp
       hasError={nodeData.status === "error"}
       minWidth={360}
       minHeight={360}
+      aspectFitMedia={nodeData.outputVideo}
     >
       {renderHandles()}
 
