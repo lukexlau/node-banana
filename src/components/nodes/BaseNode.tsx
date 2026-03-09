@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useCallback } from "react";
+import { ReactNode, useCallback, useRef, useLayoutEffect, useState } from "react";
 import { Node, NodeResizer, OnResize, useReactFlow } from "@xyflow/react";
 import { useWorkflowStore } from "@/store/workflowStore";
 import { getMediaDimensions, calculateAspectFitSize } from "@/utils/nodeDimensions";
@@ -74,6 +74,78 @@ export function BaseNode({
   const isCurrentlyExecuting = currentNodeIds.includes(id);
   const { getNodes, setNodes } = useReactFlow();
 
+  const settingsPanelRef = useRef<HTMLDivElement>(null);
+  const [trackedSettingsHeight, setTrackedSettingsHeight] = useState(0);
+
+  // Adjust node height when settings expand/collapse
+  useLayoutEffect(() => {
+    if (settingsExpanded && settingsPanel) {
+      // Expanding: measure settings panel and increase node height
+      const measure = () => {
+        const panelEl = settingsPanelRef.current;
+        if (!panelEl) return;
+        const panelHeight = panelEl.scrollHeight;
+        if (panelHeight === 0) return;
+
+        setTrackedSettingsHeight(panelHeight);
+        setNodes((nodes) =>
+          nodes.map((node) => {
+            if (node.id !== id) return node;
+            const currentHeight = getNodeDimension(node, "height");
+            const newHeight = currentHeight + panelHeight;
+            return applyNodeDimensions(node, getNodeDimension(node, "width"), newHeight);
+          })
+        );
+      };
+
+      // Use rAF to ensure DOM has rendered the panel content
+      requestAnimationFrame(measure);
+    } else if (!settingsExpanded && trackedSettingsHeight > 0) {
+      // Collapsing: decrease node height by the tracked amount
+      const heightToRemove = trackedSettingsHeight;
+      setTrackedSettingsHeight(0);
+      setNodes((nodes) =>
+        nodes.map((node) => {
+          if (node.id !== id) return node;
+          const currentHeight = getNodeDimension(node, "height");
+          const newHeight = Math.max(minHeight, currentHeight - heightToRemove);
+          return applyNodeDimensions(node, getNodeDimension(node, "width"), newHeight);
+        })
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [settingsExpanded]);
+
+  // ResizeObserver to track dynamic settings panel height changes (e.g., model param count changes)
+  useLayoutEffect(() => {
+    if (!settingsExpanded || !settingsPanel) return;
+    const panelEl = settingsPanelRef.current;
+    if (!panelEl) return;
+
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const newPanelHeight = entry.contentRect.height;
+        if (newPanelHeight === 0) continue;
+        const delta = newPanelHeight - trackedSettingsHeight;
+        if (Math.abs(delta) < 2) continue; // Ignore sub-pixel changes
+
+        setTrackedSettingsHeight(newPanelHeight);
+        setNodes((nodes) =>
+          nodes.map((node) => {
+            if (node.id !== id) return node;
+            const currentHeight = getNodeDimension(node, "height");
+            const newHeight = Math.max(minHeight, currentHeight + delta);
+            return applyNodeDimensions(node, getNodeDimension(node, "width"), newHeight);
+          })
+        );
+      }
+    });
+
+    observer.observe(panelEl);
+    return () => observer.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [settingsExpanded, settingsPanel, trackedSettingsHeight]);
+
   const handleResize: OnResize = useCallback(
     (_event, params) => {
       setNodes((nodes) =>
@@ -120,8 +192,15 @@ export function BaseNode({
     [aspectFitMedia, id, fullBleed, getNodes, setNodes]
   );
 
+  const hasExpandedSettings = settingsExpanded && settingsPanel;
+
   return (
-    <div className="contents" onDoubleClick={handleResizeHandleDblClick}>
+    <div
+      className={hasExpandedSettings
+        ? `relative flex flex-col w-full h-full overflow-visible ${selected ? "ring-2 ring-blue-500/40 shadow-lg shadow-blue-500/25 rounded-lg" : ""}`
+        : "contents"}
+      onDoubleClick={handleResizeHandleDblClick}
+    >
       <NodeResizer
         isVisible={selected}
         minWidth={minWidth}
@@ -132,7 +211,7 @@ export function BaseNode({
       />
       <div
         className={`
-          h-full w-full flex flex-col overflow-visible relative
+          ${hasExpandedSettings ? "flex-1 min-h-0 w-full" : "h-full w-full"} flex flex-col overflow-visible relative
           ${fullBleed
             ? `${settingsExpanded ? "rounded-t-lg border-b-0" : "rounded-lg"} bg-neutral-800/50 border border-neutral-700/40`
             : `bg-neutral-800 ${settingsExpanded ? "rounded-t-lg border-b-0" : "rounded-lg"} shadow-lg border`}
@@ -146,17 +225,13 @@ export function BaseNode({
         onMouseEnter={() => setHoveredNodeId(id)}
         onMouseLeave={() => setHoveredNodeId(null)}
       >
-        {/* When settings panel is expanded, render the selection ring as a separate clipped overlay
-            so it doesn't show a line at the bottom — the InlineParameterPanel draws the bottom half */}
-        {settingsExpanded && selected && (
-          <div
-            className="absolute -inset-px rounded-t-lg ring-2 ring-blue-500/40 shadow-lg shadow-blue-500/25 pointer-events-none"
-            style={{ clipPath: 'inset(-20px -20px 1px -20px)' }}
-          />
-        )}
         <div className={contentClassName ?? (fullBleed ? "flex-1 min-h-0 relative" : "px-3 pb-4 flex-1 min-h-0 overflow-hidden flex flex-col")}>{children}</div>
       </div>
-      {settingsPanel}
+      {settingsPanel && (
+        <div ref={settingsPanelRef}>
+          {settingsPanel}
+        </div>
+      )}
     </div>
   );
 }

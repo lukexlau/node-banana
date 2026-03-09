@@ -57,7 +57,6 @@ export function GenerateVideoNode({ id, data, selected }: NodeProps<GenerateVide
 
   // Inline parameters infrastructure
   const { inlineParametersEnabled } = useInlineParameters();
-  const parameterPanelRef = useRef<HTMLDivElement>(null);
 
   const currentProvider: ProviderType = nodeData.selectedModel?.provider || "fal";
 
@@ -403,39 +402,6 @@ export function GenerateVideoNode({ id, data, selected }: NodeProps<GenerateVide
     });
   }, [id, nodeData.outputVideo, setNodes]);
 
-  // Node height management for inline parameters
-  useEffect(() => {
-    if (!inlineParametersEnabled) return;
-
-    // Use RAF to wait for render
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        const currentNode = useWorkflowStore.getState().nodes.find(n => n.id === id);
-        if (!currentNode) return;
-
-        const baseHeight = typeof currentNode.style?.height === 'number'
-          ? currentNode.style.height
-          : 300;
-
-        let paramHeight = 0;
-        if (isParamsExpanded && parameterPanelRef.current) {
-          // Measure the actual rendered height of parameters
-          const panelContent = parameterPanelRef.current.querySelector('#params-' + id);
-          if (panelContent) {
-            paramHeight = (panelContent as HTMLElement).scrollHeight;
-          }
-        }
-        // Add chevron button height (~28px)
-        const chevronHeight = 28;
-        const totalHeight = baseHeight + chevronHeight + paramHeight;
-
-        setNodes(nodes => nodes.map(n =>
-          n.id === id ? { ...n, style: { ...n.style, height: totalHeight } } : n
-        ));
-      });
-    });
-  }, [id, isParamsExpanded, inlineParametersEnabled, setNodes]);
-
   return (
     <>
     <BaseNode
@@ -451,7 +417,6 @@ export function GenerateVideoNode({ id, data, selected }: NodeProps<GenerateVide
           expanded={isParamsExpanded}
           onToggle={handleToggleParams}
           nodeId={id}
-          selected={selected}
         >
           {/* External provider parameters - reuse ModelParameters component */}
           {nodeData.selectedModel?.modelId && !isVeoModel(nodeData.selectedModel.modelId) && (

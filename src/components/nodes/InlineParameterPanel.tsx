@@ -7,31 +7,20 @@ interface InlineParameterPanelProps {
   onToggle: () => void;
   children: ReactNode;
   nodeId: string;
-  selected?: boolean;
 }
 
 /**
  * Collapsible parameter container for inline display within generation nodes.
- * Provides a chevron toggle button and smooth expand/collapse transitions.
+ * Provides a chevron toggle button and instant expand/collapse.
  */
 export function InlineParameterPanel({
   expanded,
   onToggle,
   children,
   nodeId,
-  selected = false,
 }: InlineParameterPanelProps) {
-  // When expanded + selected, draw ring on bottom half and clip the top edge
-  // so it merges seamlessly with BaseNode's ring (which clips its bottom edge)
-  const ringClass = expanded && selected
-    ? "ring-2 ring-blue-500/40 rounded-b-lg"
-    : "";
-  const ringStyle = expanded && selected
-    ? { clipPath: 'inset(0 -20px -20px -20px)' }
-    : undefined;
-
   return (
-    <div className={`w-full ${ringClass}`} style={ringStyle}>
+    <>
       {/* Settings toggle button — no background when collapsed, floats below node edge */}
       <button
         type="button"
@@ -56,19 +45,15 @@ export function InlineParameterPanel({
         </svg>
       </button>
 
-      {/* Collapsible content area */}
-      <div
-        id={`params-${nodeId}`}
-        className="overflow-hidden transition-all duration-200"
-        style={{
-          maxHeight: expanded ? "2000px" : "0",
-          opacity: expanded ? 1 : 0,
-        }}
-      >
-        <div className="nodrag nopan nowheel bg-[#2a2a2a] px-3 pt-2 pb-3 rounded-b-lg">
-          <div className="space-y-1.5 max-w-[280px] mx-auto">{children}</div>
+      {/* Content area — instant show/hide */}
+      {expanded && (
+        <div
+          id={`params-${nodeId}`}
+          className="nodrag nopan nowheel bg-[#2a2a2a] px-3 pt-2 pb-3 rounded-b-lg"
+        >
+          {children}
         </div>
-      </div>
-    </div>
+      )}
+    </>
   );
 }

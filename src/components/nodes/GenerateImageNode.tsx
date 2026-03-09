@@ -52,7 +52,6 @@ export function GenerateImageNode({ id, data, selected }: NodeProps<NanoBananaNo
 
   // Inline parameters infrastructure
   const { inlineParametersEnabled } = useInlineParameters();
-  const parameterPanelRef = useRef<HTMLDivElement>(null);
 
   // Get the current selected provider (default to gemini)
   const currentProvider: ProviderType = nodeData.selectedModel?.provider || "gemini";
@@ -495,39 +494,6 @@ export function GenerateImageNode({ id, data, selected }: NodeProps<NanoBananaNo
     });
   }, [id, nodeData.outputImage, setNodes]);
 
-  // Node height management for inline parameters
-  useEffect(() => {
-    if (!inlineParametersEnabled) return;
-
-    // Use RAF to wait for render
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        const currentNode = useWorkflowStore.getState().nodes.find(n => n.id === id);
-        if (!currentNode) return;
-
-        const baseHeight = typeof currentNode.style?.height === 'number'
-          ? currentNode.style.height
-          : 300;
-
-        let paramHeight = 0;
-        if (isParamsExpanded && parameterPanelRef.current) {
-          // Measure the actual rendered height of parameters
-          const panelContent = parameterPanelRef.current.querySelector('#params-' + id);
-          if (panelContent) {
-            paramHeight = (panelContent as HTMLElement).scrollHeight;
-          }
-        }
-        // Add chevron button height (~28px)
-        const chevronHeight = 28;
-        const totalHeight = baseHeight + chevronHeight + paramHeight;
-
-        setNodes(nodes => nodes.map(n =>
-          n.id === id ? { ...n, style: { ...n.style, height: totalHeight } } : n
-        ));
-      });
-    });
-  }, [id, isParamsExpanded, inlineParametersEnabled, setNodes]);
-
   return (
     <>
     <BaseNode
@@ -543,7 +509,6 @@ export function GenerateImageNode({ id, data, selected }: NodeProps<NanoBananaNo
           expanded={isParamsExpanded}
           onToggle={handleToggleParams}
           nodeId={id}
-          selected={selected}
         >
           {/* Gemini-specific controls */}
           {isGeminiProvider && currentModelId && (
