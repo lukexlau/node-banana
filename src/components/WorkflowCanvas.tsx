@@ -1283,7 +1283,10 @@ export function WorkflowCanvas() {
   }, []);
 
   // Get copy/paste functions and clipboard from store
-  const { copySelectedNodes, pasteNodes, clearClipboard, clipboard } = useWorkflowStore();
+  const copySelectedNodes = useWorkflowStore((state) => state.copySelectedNodes);
+  const pasteNodes = useWorkflowStore((state) => state.pasteNodes);
+  const clearClipboard = useWorkflowStore((state) => state.clearClipboard);
+  const clipboard = useWorkflowStore((state) => state.clipboard);
 
   // Add non-passive wheel listener to handle zoom/pan and prevent browser navigation
   // This replaces the onWheel prop which is passive by default and can't preventDefault

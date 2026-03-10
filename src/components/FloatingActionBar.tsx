@@ -2,6 +2,7 @@
 
 import { useRef, useState, useEffect, useMemo, useCallback } from "react";
 import { useWorkflowStore } from "@/store/workflowStore";
+import { useShallow } from "zustand/shallow";
 import { NodeType } from "@/types";
 import { useReactFlow } from "@xyflow/react";
 import { ModelSearchDialog } from "./modals/ModelSearchDialog";
@@ -320,7 +321,21 @@ export function FloatingActionBar() {
     setModelSearchOpen,
     modelSearchOpen,
     modelSearchProvider,
-  } = useWorkflowStore();
+  } = useWorkflowStore(useShallow((state) => ({
+    nodes: state.nodes,
+    isRunning: state.isRunning,
+    currentNodeIds: state.currentNodeIds,
+    executeWorkflow: state.executeWorkflow,
+    regenerateNode: state.regenerateNode,
+    executeSelectedNodes: state.executeSelectedNodes,
+    stopWorkflow: state.stopWorkflow,
+    validateWorkflow: state.validateWorkflow,
+    edgeStyle: state.edgeStyle,
+    setEdgeStyle: state.setEdgeStyle,
+    setModelSearchOpen: state.setModelSearchOpen,
+    modelSearchOpen: state.modelSearchOpen,
+    modelSearchProvider: state.modelSearchProvider,
+  })));
 
   // Get display text for running nodes
   const runningNodeCount = currentNodeIds.length;
