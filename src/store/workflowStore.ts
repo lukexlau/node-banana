@@ -526,7 +526,7 @@ const workflowStoreImpl: StateCreator<WorkflowStore> = (set, get) => ({
   },
 
   setHoveredNodeId: (id: string | null) => {
-    set({ hoveredNodeId: id });
+    if (get().hoveredNodeId !== id) set({ hoveredNodeId: id });
   },
 
   addNode: (type: NodeType, position: XYPosition, initialData?: Partial<WorkflowNodeData>) => {
