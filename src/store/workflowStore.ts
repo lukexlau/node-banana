@@ -813,7 +813,6 @@ const workflowStoreImpl: StateCreator<WorkflowStore> = (set, get) => ({
 
     // Add padding around nodes
     const padding = 20;
-    const headerHeight = 32; // Match HEADER_HEIGHT in GroupsOverlay
 
     // Find next available color
     const usedColors = new Set(Object.values(groups).map((g) => g.color));
@@ -836,11 +835,11 @@ const workflowStoreImpl: StateCreator<WorkflowStore> = (set, get) => ({
       color,
       position: {
         x: minX - padding,
-        y: minY - padding - headerHeight
+        y: minY - padding,
       },
       size: {
         width: maxX - minX + padding * 2,
-        height: maxY - minY + padding * 2 + headerHeight,
+        height: maxY - minY + padding * 2,
       },
     };
 
