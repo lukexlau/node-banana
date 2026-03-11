@@ -87,6 +87,7 @@ export function ImageInputNode({ id, data, selected }: NodeProps<ImageInputNodeT
       selected={selected}
       contentClassName="flex-1 min-h-0 overflow-clip"
       aspectFitMedia={nodeData.image}
+      fullBleed
     >
       {/* Reference input handle for visual links from Split Grid node */}
       <Handle
