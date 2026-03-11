@@ -196,8 +196,8 @@ export function ArrayNode({ id, data, selected }: NodeProps<ArrayNodeType>) {
         </svg>
       </button>
 
-      <div className="flex flex-col gap-2 flex-1 min-h-0">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col gap-2 pt-1 flex-1 min-h-0">
+        <div className="flex items-center gap-2 max-w-[75%]">
           <label className="shrink-0 text-[11px] text-neutral-400">Split</label>
           <select
             value={nodeData.splitMode}
@@ -211,7 +211,7 @@ export function ArrayNode({ id, data, selected }: NodeProps<ArrayNodeType>) {
         </div>
 
         {nodeData.splitMode === "delimiter" && (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 max-w-[75%]">
             <label className="shrink-0 text-[11px] text-neutral-400">By</label>
             <input
               value={nodeData.delimiter}
@@ -223,7 +223,7 @@ export function ArrayNode({ id, data, selected }: NodeProps<ArrayNodeType>) {
         )}
 
         {nodeData.splitMode === "regex" && (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 max-w-[75%]">
             <label className="shrink-0 text-[11px] text-neutral-400">By</label>
             <input
               value={nodeData.regexPattern}
