@@ -81,20 +81,26 @@ export function BaseNode({
   const isAnimatingRef = useRef(false);
   const animationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isInitialMountRef = useRef(true);
-  // When true, the ResizeObserver should sync trackedSettingsHeightRef without
-  // modifying node dimensions (the height is already accounted for from a
+  // When true, the ResizeObserver syncs trackedSettingsHeightRef without
+  // modifying node dimensions (height already includes the panel from a
   // previous mount before onlyRenderVisibleElements unmounted us).
-  const skipFirstObserveRef = useRef(false);
+  const suppressObserverRef = useRef(false);
+  const suppressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Adjust node height when settings expand or collapse
   useLayoutEffect(() => {
     // On initial mount with settings already expanded (e.g. remount after
     // onlyRenderVisibleElements), the node height already includes the panel.
-    // Tell the ResizeObserver to sync without adding height.
+    // Suppress ResizeObserver dimension changes while the panel settles.
     if (isInitialMountRef.current) {
       isInitialMountRef.current = false;
       if (settingsExpanded && settingsPanel) {
-        skipFirstObserveRef.current = true;
+        suppressObserverRef.current = true;
+        // Allow suppression for long enough that the panel fully renders
+        suppressTimerRef.current = setTimeout(() => {
+          suppressObserverRef.current = false;
+          suppressTimerRef.current = null;
+        }, 300);
       }
       return;
     }
@@ -187,8 +193,7 @@ export function BaseNode({
 
         // On remount with settings already expanded, the node height already
         // includes the panel. Just sync the ref without modifying dimensions.
-        if (skipFirstObserveRef.current) {
-          skipFirstObserveRef.current = false;
+        if (suppressObserverRef.current) {
           trackedSettingsHeightRef.current = newPanelHeight;
           continue;
         }
@@ -231,11 +236,14 @@ export function BaseNode({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [settingsExpanded, settingsPanel]);
 
-  // Cleanup animation timeout on unmount
+  // Cleanup timeouts on unmount
   useLayoutEffect(() => {
     return () => {
       if (animationTimeoutRef.current) {
         clearTimeout(animationTimeoutRef.current);
+      }
+      if (suppressTimerRef.current) {
+        clearTimeout(suppressTimerRef.current);
       }
     };
   }, []);
